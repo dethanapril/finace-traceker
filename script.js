@@ -203,6 +203,115 @@ function init() {
     updateValues(); // Update ringkasan
 }
 
+// Tambahkan di script.js
+let categoryChart = null;
+
+function generateReport() {
+    const selectedMonth = document.getElementById('report-month').value;
+    const [year, month] = selectedMonth.split('-');
+    
+    const filteredTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        return transactionDate.getFullYear() == year && 
+               (transactionDate.getMonth() + 1) == month;
+    });
+    
+    updateReportSummary(filteredTransactions);
+    renderCategoryChart(filteredTransactions);
+    renderTransactionDetails(filteredTransactions);
+}
+
+function updateReportSummary(transactions) {
+    const income = transactions
+        .filter(t => t.amount > 0)
+        .reduce((sum, t) => sum + t.amount, 0);
+        
+    const expense = transactions
+        .filter(t => t.amount < 0)
+        .reduce((sum, t) => sum + t.amount, 0);
+        
+    document.getElementById('report-income').textContent = formatRupiah(income);
+    document.getElementById('report-expense').textContent = formatRupiah(Math.abs(expense));
+    document.getElementById('report-balance').textContent = formatRupiah(income + expense);
+}
+
+function renderCategoryChart(transactions) {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    
+    // Hancurkan chart sebelumnya jika ada
+    if(categoryChart) categoryChart.destroy();
+    
+    const categories = {
+        income: {},
+        expense: {}
+    };
+    
+    transactions.forEach(t => {
+        const type = t.amount > 0 ? 'income' : 'expense';
+        categories[type][t.category] = (categories[type][t.category] || 0) + Math.abs(t.amount);
+    });
+    
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(categories.expense),
+            datasets: [{
+                label: 'Pengeluaran per Kategori',
+                data: Object.values(categories.expense),
+                backgroundColor: [
+                    '#ef4444',
+                    '#f97316',
+                    '#f59e0b',
+                    '#eab308',
+                    '#84cc16'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function renderTransactionDetails(transactions) {
+    const container = document.getElementById('report-transactions');
+    container.innerHTML = transactions
+        .sort((a,b) => new Date(b.date) - new Date(a.date))
+        .map(t => `
+            <div class="transaction-item ${t.amount > 0 ? 'plus' : 'minus'}">
+                <div>
+                    <strong>${t.description}</strong>
+                    <span>${t.category}</span>
+                </div>
+                <div>
+                    <span>${formatRupiah(t.amount)}</span>
+                    <small>${new Date(t.date).toLocaleDateString('id-ID')}</small>
+                </div>
+            </div>
+        `).join('');
+}
+
+async function exportPDF() {
+    // Implementasi ekspor PDF menggunakan jsPDF
+    // (Perlu menambahkan library jsPDF)
+}
+
+// Tambahkan field kategori di transaksi (modifikasi form transaksi)
+// Tambahkan field date di object transaction:
+const newTransaction = {
+    id: generateID(),
+    description: description,
+    amount: amount,
+    category: document.getElementById('category').value, // Tambahkan select category di form
+    date: new Date().toISOString()
+};
+
 // --- EVENT LISTENERS ---
 form.addEventListener("submit", handleTransactionSubmit);
 cancelEditButton.addEventListener("click", cancelEdit);
