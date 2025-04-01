@@ -1,136 +1,408 @@
 <!DOCTYPE html>
 <html lang="id">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Pengelola Keuangan Sederhana</title>
-        <link rel="stylesheet" href="style.css" />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <!-- Tambahkan di head -->
-        <link href="https://cdn.jsdelivr.net/npm/@vuemodern/vue-chartjs@7.1.0/dist/vue-chartjs.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <!-- Tambahkan di head -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Pengelola Keuangan Saya</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, shrink-to-fit=no">
+    <title>Pengelola Keuangan Sederhana</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --color-plus: #10b981;
+            --color-minus: #ef4444;
+            --primary-color: #6366f1;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        }
 
-            <div class="summary">
-                <div>
-                    <h4>Saldo Saat Ini</h4>
-                    <p id="balance">Rp 0</p>
-                </div>
-                <div>
-                    <h4>Pemasukan</h4>
-                    <p id="income" class="money plus">Rp 0</p>
-                </div>
-                <div>
-                    <h4>Pengeluaran</h4>
-                    <p id="expense" class="money minus">Rp 0</p>
-                </div>
+        body {
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 800px;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: var(--box-shadow);
+            margin: 2rem auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background-image: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .summary > div {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .summary h4 {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #balance {
+            color: #1e293b;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .form-control {
+            margin-bottom: 1.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .btn {
+            background-image: var(--gradient);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+        }
+
+        .list li {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .report-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                margin: 1rem auto;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pengelola Keuangan Saya</h1>
+
+        <div class="summary">
+            <div>
+                <h4>Saldo Saat Ini</h4>
+                <p id="balance">Rp 0</p>
             </div>
-
-            <h3>Tambah Transaksi Baru</h3>
-            <form id="form">
-                <input type="hidden" id="transaction-id" />
-                <div class="form-control">
-                    <label for="description">Deskripsi</label>
-                    <input
-                        type="text"
-                        id="description"
-                        placeholder="Masukkan deskripsi..."
-                        required
-                    />
-                </div>
-                <div class="form-control">
-                    <label for="amount"
-                        >Jumlah</label
-                    >
-                    <input
-                        type="number"
-                        id="amount"
-                        placeholder="Masukkan jumlah..."
-                        required
-                    />
-                </div>
-                <div class="form-control">
-                    <label for="type">Tipe</label>
-                    <select id="type">
-                        <option value="income">Pemasukan</option>
-                        <option value="expense">Pengeluaran</option>
-                    </select>
-                </div>
-                <!-- Tambahkan di dalam form -->
-                <div class="form-control">
-                    <label for="category">Kategori</label>
-                    <select id="category" required>
-                        <option value="Makanan">Makanan</option>
-                        <option value="Transportasi">Transportasi</option>
-                        <option value="Hiburan">Hiburan</option>
-                        <option value="Tagihan">Tagihan</option>
-                        <option value="Lainnya">Lainnya</option>
-                    </select>
-                </div>
-                <button class="btn" type="submit">Tambah Transaksi</button>
-                <button
-                    class="btn cancel"
-                    type="button"
-                    id="cancel-edit"
-                    style="display: none"
-                >
-                    Batal Edit
-                </button>
-            </form>
-
-            <h3>Riwayat Transaksi</h3>
-            <ul id="transaction-list" class="list"></ul>
+            <div>
+                <h4>Pemasukan</h4>
+                <p id="income" class="money plus">Rp 0</p>
+            </div>
+            <div>
+                <h4>Pengeluaran</h4>
+                <p id="expense" class="money minus">Rp 0</p>
+            </div>
         </div>
 
-        
+        <form id="form">
+            <input type="hidden" id="transaction-id">
+            <div class="form-control">
+                <label for="description">Deskripsi</label>
+                <input type="text" id="description" required>
+            </div>
+            <div class="form-control">
+                <label for="amount">Jumlah</label>
+                <input type="number" id="amount" required>
+            </div>
+            <div class="form-control">
+                <label for="type">Tipe</label>
+                <select id="type">
+                    <option value="income">Pemasukan</option>
+                    <option value="expense">Pengeluaran</option>
+                </select>
+            </div>
+            <div class="form-control">
+                <label for="category">Kategori</label>
+                <select id="category" required>
+                    <option value="Makanan">Makanan</option>
+                    <option value="Transportasi">Transportasi</option>
+                    <option value="Hiburan">Hiburan</option>
+                    <option value="Tagihan">Tagihan</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+            <button class="btn" type="submit">Tambah Transaksi</button>
+            <button class="btn cancel" type="button" id="cancel-edit" hidden>Batal Edit</button>
+        </form>
+
+        <h3>Riwayat Transaksi</h3>
+        <ul id="transaction-list" class="list"></ul>
+
         <div class="report-section">
             <h3>Laporan Keuangan</h3>
-            
             <div class="report-controls">
-                <div class="form-control">
-                    <label for="report-month">Pilih Bulan</label>
-                    <input type="month" id="report-month" required>
-                </div>
+                <input type="month" id="report-month" required>
                 <button class="btn" onclick="generateReport()">Buat Laporan</button>
                 <button class="btn" onclick="exportPDF()">Export PDF</button>
             </div>
-        
             <div id="report-output">
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
-                
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <h4>Total Pemasukan</h4>
-                        <p id="report-income">Rp0</p>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Total Pengeluaran</h4>
-                        <p id="report-expense">Rp0</p>
-                    </div>
-                    <div class="summary-card">
-                        <h4>Saldo Akhir</h4>
-                        <p id="report-balance">Rp0</p>
-                    </div>
-                </div>
-        
-                <div class="transaction-details">
-                    <h4>Detail Transaksi</h4>
-                    <div id="report-transactions"></div>
-                </div>
+                <div id="report-transactions"></div>
             </div>
         </div>
+    </div>
 
-        <script src="script.js"></script>
-    </body>
+    <script>
+        const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let isEditing = false;
+        let categoryChart = null;
+
+        // DOM Elements
+        const dom = {
+            balance: document.getElementById('balance'),
+            income: document.getElementById('income'),
+            expense: document.getElementById('expense'),
+            form: document.getElementById('form'),
+            description: document.getElementById('description'),
+            amount: document.getElementById('amount'),
+            type: document.getElementById('type'),
+            category: document.getElementById('category'),
+            transactionId: document.getElementById('transaction-id'),
+            transactionList: document.getElementById('transaction-list'),
+            cancelEdit: document.getElementById('cancel-edit'),
+        };
+
+        // Utility Functions
+        const formatRupiah = (number) => 
+            new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
+
+        const generateID = () => `trx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Transaction Functions
+        function addTransactionDOM(transaction) {
+            const li = document.createElement('li');
+            li.className = transaction.amount > 0 ? 'plus' : 'minus';
+            li.innerHTML = `
+                <div>
+                    <strong>${transaction.description}</strong>
+                    <small>${transaction.category} • ${new Date(transaction.date).toLocaleDateString('id-ID')}</small>
+                </div>
+                <span>${formatRupiah(transaction.amount)}</span>
+                <div>
+                    <button class="edit-btn" onclick="editTransaction('${transaction.id}')">Ubah</button>
+                    <button class="delete-btn" onclick="removeTransaction('${transaction.id}')">Hapus</button>
+                </div>
+            `;
+            dom.transactionList.appendChild(li);
+        }
+
+        function updateValues() {
+            const amounts = transactions.map(t => t.amount);
+            const total = amounts.reduce((a, b) => a + b, 0);
+            const income = amounts.filter(a => a > 0).reduce((a, b) => a + b, 0);
+            const expense = amounts.filter(a => a < 0).reduce((a, b) => a + b, 0);
+
+            dom.balance.textContent = formatRupiah(total);
+            dom.income.textContent = formatRupiah(income);
+            dom.expense.textContent = formatRupiah(Math.abs(expense));
+        }
+
+        // CRUD Operations
+        function saveTransaction(e) {
+            e.preventDefault();
+
+            const transaction = {
+                id: dom.transactionId.value || generateID(),
+                description: dom.description.value.trim(),
+                amount: Number(dom.amount.value) * (dom.type.value === 'expense' ? -1 : 1),
+                category: dom.category.value,
+                date: new Date().toISOString()
+            };
+
+            if (isEditing) {
+                const index = transactions.findIndex(t => t.id === transaction.id);
+                transactions[index] = transaction;
+                isEditing = false;
+            } else {
+                transactions.push(transaction);
+            }
+
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            init();
+            dom.form.reset();
+        }
+
+        function editTransaction(id) {
+            const transaction = transactions.find(t => t.id === id);
+            dom.transactionId.value = id;
+            dom.description.value = transaction.description;
+            dom.amount.value = Math.abs(transaction.amount);
+            dom.type.value = transaction.amount > 0 ? 'income' : 'expense';
+            dom.category.value = transaction.category;
+            dom.cancelEdit.hidden = false;
+            isEditing = true;
+        }
+
+        function removeTransaction(id) {
+            if (!confirm('Hapus transaksi ini?')) return;
+            const index = transactions.findIndex(t => t.id === id);
+            transactions.splice(index, 1);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            init();
+        }
+
+        // Report Functions
+        function generateReport() {
+            const [year, month] = document.getElementById('report-month').value.split('-');
+            const filtered = transactions.filter(t => {
+                const date = new Date(t.date);
+                return date.getFullYear() == year && date.getMonth() + 1 == month;
+            });
+
+            updateReportSummary(filtered);
+            renderChart(filtered);
+            renderTransactions(filtered);
+        }
+
+        function updateReportSummary(transactions) {
+            const income = transactions.filter(t => t.amount > 0).reduce((a, t) => a + t.amount, 0);
+            const expense = transactions.filter(t => t.amount < 0).reduce((a, t) => a + t.amount, 0);
+            
+            document.getElementById('report-income').textContent = formatRupiah(income);
+            document.getElementById('report-expense').textContent = formatRupiah(Math.abs(expense));
+            document.getElementById('report-balance').textContent = formatRupiah(income + expense);
+        }
+
+        function renderChart(transactions) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+
+            const categories = transactions.reduce((acc, t) => {
+                const type = t.amount > 0 ? 'income' : 'expense';
+                acc[type][t.category] = (acc[type][t.category] || 0) + Math.abs(t.amount);
+                return acc;
+            }, { income: {}, expense: {} });
+
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categories.expense),
+                    datasets: [{
+                        data: Object.values(categories.expense),
+                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16']
+                    }]
+                }
+            });
+        }
+
+        async function exportPDF() {
+            const doc = new jspdf.jsPDF();
+            const month = document.getElementById('report-month').value;
+            
+            // Header
+            doc.setFontSize(18);
+            doc.text(`Laporan Keuangan - ${month}`, 15, 15);
+            
+            // Summary
+            doc.setFontSize(12);
+            doc.text(`Saldo Akhir: ${document.getElementById('report-balance').textContent}`, 15, 30);
+            
+            // Chart
+            const canvas = await html2canvas(document.querySelector('#categoryChart'));
+            doc.addImage(canvas.toDataURL('image/png'), 'PNG', 15, 40, 180, 100);
+            
+            // Transactions
+            doc.addPage();
+            doc.text('Detail Transaksi:', 15, 15);
+            transactions.forEach((t, i) => {
+                const y = 25 + (i * 10);
+                doc.text(`${t.description} - ${formatRupiah(t.amount)}`, 15, y);
+            });
+
+            doc.save(`Laporan-${month}.pdf`);
+        }
+
+        // Initialization
+        function init() {
+            dom.transactionList.innerHTML = transactions.length 
+                ? transactions.map(t => {
+                    const li = document.createElement('li');
+                    li.className = t.amount > 0 ? 'plus' : 'minus';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${t.description}</strong>
+                            <small>${t.category} • ${new Date(t.date).toLocaleDateString('id-ID')}</small>
+                        </div>
+                        <span>${formatRupiah(t.amount)}</span>
+                        <div>
+                            <button class="edit-btn" onclick="editTransaction('${t.id}')">Ubah</button>
+                            <button class="delete-btn" onclick="removeTransaction('${t.id}')">Hapus</button>
+                        </div>
+                    `;
+                    return li.outerHTML;
+                }).join('')
+                : '<li>Belum ada transaksi</li>';
+
+            updateValues();
+        }
+
+        // Event Listeners
+        dom.form.addEventListener('submit', saveTransaction);
+        dom.cancelEdit.addEventListener('click', () => {
+            dom.form.reset();
+            dom.cancelEdit.hidden = true;
+            isEditing = false;
+        });
+
+        // Initial Load
+        init();
+    </script>
+</body>
 </html>
