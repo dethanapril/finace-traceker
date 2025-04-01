@@ -161,6 +161,64 @@ input:focus, select:focus {
     background: var(--primary-color);
     color: white;
 }
+
+/* CSS Tambahan */
+.report-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.report-controls {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr auto auto;
+    margin-bottom: 1.5rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 2rem 0;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.summary-card {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.transaction-details {
+    margin-top: 2rem;
+}
+
+#report-transactions {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .report-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Tambahkan media query untuk mobile */
 @media (max-width: 480px) {
     .container {
