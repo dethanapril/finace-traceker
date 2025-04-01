@@ -298,8 +298,117 @@ function renderTransactionDetails(transactions) {
 }
 
 async function exportPDF() {
-    // Implementasi ekspor PDF menggunakan jsPDF
-    // (Perlu menambahkan library jsPDF)
+    // Validasi data
+    const reportMonth = document.getElementById('report-month').value;
+    if (!reportMonth) {
+        alert('Silakan pilih bulan terlebih dahulu dan generate laporan!');
+        return;
+    }
+
+    // Inisialisasi PDF
+    const doc = new jspdf.jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    // Styling
+    const titleColor = '#6366f1';
+    const headerColor = '#2d3748';
+    const textColor = '#4a5568';
+    const lineHeight = 7;
+    let yPosition = 15;
+
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(titleColor);
+    doc.text(`Laporan Keuangan ${reportMonth}`, 15, yPosition);
+    yPosition += 10;
+
+    // Add summary
+    doc.setFontSize(12);
+    doc.setTextColor(headerColor);
+    doc.text('Ringkasan Keuangan:', 15, yPosition);
+    yPosition += lineHeight;
+
+    const summaryData = [
+        { label: 'Total Pemasukan', value: document.getElementById('report-income').textContent },
+        { label: 'Total Pengeluaran', value: document.getElementById('report-expense').textContent },
+        { label: 'Saldo Akhir', value: document.getElementById('report-balance').textContent }
+    ];
+
+    doc.setFontSize(10);
+    doc.setTextColor(textColor);
+    summaryData.forEach(item => {
+        doc.text(`${item.label}:`, 20, yPosition);
+        doc.text(item.value, 60, yPosition);
+        yPosition += lineHeight;
+    });
+    yPosition += 5;
+
+    // Add chart image
+    const canvas = document.getElementById('categoryChart');
+    if (canvas) {
+        const canvasImage = await getCanvasImage(canvas);
+        const imgWidth = 180;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        doc.addImage(canvasImage, 'PNG', 15, yPosition, imgWidth, imgHeight);
+        yPosition += imgHeight + 10;
+    }
+
+    // Add transaction details
+    doc.addPage();
+    yPosition = 15;
+    
+    doc.setFontSize(12);
+    doc.setTextColor(headerColor);
+    doc.text('Detail Transaksi:', 15, yPosition);
+    yPosition += lineHeight;
+
+    const transactions = Array.from(document.querySelectorAll('#report-transactions .transaction-item'));
+    
+    doc.setFontSize(8);
+    transactions.forEach((transaction, index) => {
+        if (yPosition > 280) { // Jika mencapai batas halaman
+            doc.addPage();
+            yPosition = 15;
+        }
+
+        const isIncome = transaction.classList.contains('plus');
+        const cols = transaction.querySelectorAll('div');
+        const desc = cols[0].querySelector('strong').textContent;
+        const category = cols[0].querySelector('span').textContent;
+        const amount = cols[1].querySelector('span').textContent;
+        const date = cols[1].querySelector('small').textContent;
+
+        // Transaction header
+        doc.setTextColor(isIncome ? '#10b981' : '#ef4444');
+        doc.text(`${date} - ${category}`, 15, yPosition);
+        doc.text(amount, 180, yPosition, { align: 'right' });
+        yPosition += lineHeight;
+
+        // Description
+        doc.setTextColor(textColor);
+        doc.text(desc, 20, yPosition);
+        yPosition += lineHeight + 2;
+
+        // Separator
+        doc.setDrawColor(224, 224, 224);
+        doc.line(15, yPosition, 195, yPosition);
+        yPosition += 5;
+    });
+
+    // Save PDF
+    doc.save(`Laporan-Keuangan-${reportMonth}.pdf`);
+}
+
+async function getCanvasImage(canvas) {
+    return new Promise((resolve) => {
+        html2canvas(canvas).then(canvasImage => {
+            resolve(canvasImage.toDataURL('image/png'));
+        });
+    });
 }
 
 // Tambahkan field kategori di transaksi (modifikasi form transaksi)
